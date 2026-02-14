@@ -8,6 +8,15 @@ export const submitUser = mutation({
     gender: v.union(v.literal("m"), v.literal("f")),
   },
   handler: async (ctx, args) => {
+    const existingUser = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("name"), args.name))
+      .first();
+
+    if (existingUser) {
+      return null;
+    }
+
     const docId = await ctx.db.insert("users", {
       name: args.name,
       instagramId: args.instagramId,
