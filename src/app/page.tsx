@@ -15,12 +15,15 @@ export default function Home() {
   const [name, setName] = useState("");
   const [instagramId, setInstagramId] = useState("");
   const [gender, setGender] = useState<"m" | "f">("m");
-  const [match, setMatch] = useState<{ name: string; instagramId: string } | null>(null);
   const [error, setError] = useState("");
 
   const submitUser = useMutation(api.users.submitUser);
+  const [submittedGender, setSubmittedGender] = useState<"m" | "f" | null>(null);
   
-  const oppositeGender = gender === "m" ? "f" : "m";
+  const oppositeGender = submittedGender 
+    ? (submittedGender === "m" ? "f" : "m")
+    : (gender === "m" ? "f" : "m");
+    
   const randomMatch = useQuery(api.users.getRandomOpposite, { gender: oppositeGender });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +36,7 @@ export default function Home() {
     }
 
     setStep("loading");
+    setSubmittedGender(gender);
 
     try {
       await submitUser({
@@ -43,9 +47,6 @@ export default function Home() {
 
       await new Promise((resolve) => setTimeout(resolve, 2500));
       
-      if (randomMatch) {
-        setMatch({ name: randomMatch.name, instagramId: randomMatch.instagramId });
-      }
       setStep("result");
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -160,7 +161,7 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              {match ? (
+              {step === "result" && randomMatch ? (
                 <div className="space-y-4">
                   <div className="relative mx-auto w-32 h-32 mb-4">
                     <img
@@ -169,35 +170,41 @@ export default function Home() {
                       className="w-full h-full rounded-full object-cover border-4 border-rose-200 shadow-lg"
                     />
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{match.name}</p>
+                  <p className="text-2xl font-bold text-gray-800">{randomMatch.name}</p>
                   <a
-                    href={`https://instagram.com/${match.instagramId.replace('@', '')}`}
+                    href={`https://instagram.com/${randomMatch.instagramId.replace('@', '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 font-semibold"
                   >
                     <Instagram className="w-5 h-5" />
-                    {match.instagramId}
+                    {randomMatch.instagramId}
                   </a>
                   <Button
-                    onClick={() => setStep("form")}
+                    onClick={() => {
+                      setStep("form");
+                      setSubmittedGender(null);
+                    }}
                     className="w-full h-12 bg-gradient-to-r from-rose-600 to-purple-600 hover:from-rose-700 hover:to-purple-700 text-white font-semibold shadow-lg"
                   >
                     Find Another Match
                   </Button>
                 </div>
-              ) : (
+              ) : step === "result" ? (
                 <div className="py-8">
                   <p className="text-gray-600 mb-4">No matches found yet!</p>
                   <p className="text-gray-500 text-sm mb-6">Be the first to join and find your match</p>
                   <Button
-                    onClick={() => setStep("form")}
+                    onClick={() => {
+                      setStep("form");
+                      setSubmittedGender(null);
+                    }}
                     className="w-full h-12 bg-gradient-to-r from-rose-600 to-purple-600 hover:from-rose-700 hover:to-purple-700 text-white font-semibold"
                   >
                     Try Again
                   </Button>
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </>
         )}
