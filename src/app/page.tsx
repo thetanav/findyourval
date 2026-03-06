@@ -16,15 +16,13 @@ export default function Home() {
   const [instagramId, setInstagramId] = useState("");
   const [gender, setGender] = useState<"m" | "f">("m");
   const [error, setError] = useState("");
+  const [matchImageSeed, setMatchImageSeed] = useState(() => Date.now());
 
   const submitUser = useMutation(api.users.submitUser);
   const [submittedGender, setSubmittedGender] = useState<"m" | "f" | null>(null);
-  
-  const oppositeGender = submittedGender 
-    ? (submittedGender === "m" ? "f" : "m")
-    : (gender === "m" ? "f" : "m");
-    
-  const randomMatch = useQuery(api.users.getRandomOpposite, { gender: oppositeGender });
+
+  const queryGender = submittedGender ?? gender;
+  const randomMatch = useQuery(api.users.getRandomOpposite, { gender: queryGender });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +35,7 @@ export default function Home() {
 
     setStep("loading");
     setSubmittedGender(gender);
+    setMatchImageSeed(Date.now());
 
     try {
       await submitUser({
@@ -48,7 +47,7 @@ export default function Home() {
       await new Promise((resolve) => setTimeout(resolve, 2500));
       
       setStep("result");
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
       setStep("form");
     }
@@ -154,10 +153,10 @@ export default function Home() {
                 <Sparkles className="w-10 h-10 text-white" />
               </div>
               <CardTitle className="text-2xl font-bold text-gray-800">
-                It's a Match!
+                It&apos;s a Match!
               </CardTitle>
               <CardDescription className="text-gray-500">
-                Here's your random match
+                Here&apos;s your random match
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -165,7 +164,7 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="relative mx-auto w-32 h-32 mb-4">
                     <img
-                      src={`https://cataas.com/cat?${Date.now()}`}
+                      src={`https://cataas.com/cat?${matchImageSeed}`}
                       alt="Match profile"
                       className="w-full h-full rounded-full object-cover border-4 border-rose-200 shadow-lg"
                     />
